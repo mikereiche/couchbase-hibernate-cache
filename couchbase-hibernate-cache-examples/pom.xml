@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.couchbase.client</groupId>
+        <artifactId>couchbase-hibernate-cache-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version><!--REL-->
+    </parent>
+
+    <artifactId>couchbase-hibernate-cache-examples</artifactId>
+    <version>1.0.0-SNAPSHOT</version><!--REL-->
+
+    <name>Couchbase Hibernate Cache Examples</name>
+    <description>Examples for Couchbase Hibernate Cache</description>
+
+    <properties>
+        <log4j-slf4j-impl.version>2.20.0</log4j-slf4j-impl.version>
+        <slf4j.version>1.7.36</slf4j.version>
+    </properties>
+
+    <dependencies>
+
+        <dependency>
+            <groupId>com.couchbase.client</groupId>
+            <artifactId>couchbase-hibernate-cache</artifactId>
+            <version>${couchbase-hibernate-client.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>${log4j-slf4j-impl.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+<!--
+                    <archive>
+      			<manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                        <manifestEntries>
+                            <Build-Time>${maven.build.timestamp}</Build-Time>
+                            <Automatic-Module-Name>com.couchbase.client.java.examples</Automatic-Module-Name>
+                        </manifestEntries>
+                    </archive>
+-->
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.couchbase.client</groupId>
+    <artifactId>couchbase-hibernate-cache-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version><!--REL-->
+    <packaging>pom</packaging>
+
+    <name>Couchbase Hibernate Cache Parent</name>
+    <description>Parent POM Couchbase Hibernate Cache</description>
+
+    <properties>
+        <couchbase-hibernate-client.version>1.0.0-SNAPSHOT</couchbase-hibernate-client.version>
+        <maven.compiler.release>8</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <maven-source-plugin.version>3.2.1</maven-source-plugin.version>
+        <maven-javadoc-plugin.version>3.4.1</maven-javadoc-plugin.version>
+        <build-helper-maven-plugin.version>3.2.0</build-helper-maven-plugin.version>
+
+        <gpg.keyname></gpg.keyname>
+        <gpg.passphrase></gpg.passphrase>
+        <!-- Required to stop the exec-maven-plugin complaining  -->
+        <exec.mainClass>none</exec.mainClass>
+    </properties>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
+    <dependencyManagement>
+        <dependencies>
+        </dependencies>
+    </dependencyManagement>
+
+    <url>https://couchbase.com</url>
+    <organization>
+        <name>Couchbase, Inc.</name>
+        <url>https://couchbase.com</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <id>programmatix</id>
+            <name>Graham Pople</name>
+            <email>graham.pople@couchbase.com</email>
+        </developer>
+        <developer>
+            <id>dnault</id>
+            <name>David Nault</name>
+            <email>david.nault@couchbase.com</email>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git://github.com/couchbase/couchbase-jvm-clients</connection>
+        <developerConnection>scm:git:git://github.com/couchbase/couchbase-jvm-clients</developerConnection>
+        <url>https://github.com/couchbase/couchbase-jvm-clients</url>
+    </scm>
+
+    <modules>
+        <module>couchbase-hibernate-cache</module>
+        <module>couchbase-hibernate-cache-examples</module>
+    </modules>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+            </plugins>
+        </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <getRevisionOnlyOnce>true</getRevisionOnlyOnce>
+                    <shortRevisionLength>8</shortRevisionLength>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <trimStackTrace>false</trimStackTrace>
+<!--
+                    <includes>
+                        <include>**/*Spec.class</include>
+                        <include>**/*Test.java</include>
+                    </includes>
+                    <excludedGroups>flaky</excludedGroups>
+-->
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.3.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.1.2</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <!-- Last version to support Java 8 is 9.x -->
+                        <version>9.3</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <headerLocation>config/checkstyle/checkstyle-header.txt</headerLocation>
+                    <configLocation>config/checkstyle/checkstyle-basic.xml</configLocation>
+                    <suppressionsLocation>config/checkstyle/checkstyle-suppressions.xml</suppressionsLocation>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError>
+                    <linkXRef>false</linkXRef>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>validate</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Want java-fit-performer to be executable.  Maven complains if use exec:java target as the dependencies of
+              module aren't executable.  The workaround appears to be this - disable execution by default. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.3.2</version>
+                <configuration>
+                    <skip>true</skip>
+                    <executable>java</executable>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+    </dependencies>
+
+    <profiles>
+        <profile>
+            <id>CI</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                                <configuration>
+                                    <keyname>${gpg.keyname}</keyname>
+                                    <passphraseServerId>${gpg.keyname}</passphraseServerId>
+                                    <gpgArguments>
+                                        <arg>--pinentry-mode</arg>
+                                        <arg>loopback</arg>
+                                    </gpgArguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+<!-- version changing -->
+<!--
+
+Remove -SNAPSHOT
+find . -iname "pom.xml" -exec  sed -ie 's/\(-SNAPSHOT\)\(<\/.*><\!\-\-REL\-\->\)/\2/' {} \;
+
+Insert  -SNAPSHOT, afterwards, manually change the versions preceding -SNAPSHOT
+find . -iname "pom.xml" -exec  sed -ie 's/\(<\/[^>]*><\!\-\-REL\-\->\)/\-SNAPSHOT\1/' {} \;
+
+- or -
+
+Change version from 3 to 4 and insert -SNAPSHOT.  The last 2 references the second search pattern group.
+
+find . -iname "pom.xml" -exec  sed -ie 's/\(3\)\(<\/[^>]*><\!\-\-REL\-\->\)/4\-SNAPSHOT\2/' {} \;
+
+# check with
+git diff | grep '^+ '  | grep -v '\.4-SNAPSHOT'
+-->
+
+</project>
