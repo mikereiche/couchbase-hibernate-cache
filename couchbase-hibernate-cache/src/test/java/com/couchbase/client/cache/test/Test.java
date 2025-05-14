@@ -11,18 +11,24 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Properties;
 
+import static com.couchbase.client.cache.CouchbaseCachingProvider.KEYSPACE_PROP;
+import static com.couchbase.client.cache.CouchbaseCachingProvider.PASSWORD_PROP;
+import static com.couchbase.client.cache.CouchbaseCachingProvider.URI_PROP;
+import static com.couchbase.client.cache.CouchbaseCachingProvider.USERNAME_PROP;
+
 public class Test {
 
   public static void main(String[] args) throws URISyntaxException {
     Properties props = new Properties();
     // username/password/bucket.  These are removed before properties is fed into builder.load(props).
     // default scope and collection are used
-    props.put("username", "Administrator");
-    props.put("password", "password");
-    props.put("bucket", "cache");
+    props.put(URI_PROP, "couchbase://localhost");
+    props.put(USERNAME_PROP, "Administrator");
+    props.put(PASSWORD_PROP, "password");
+    props.put(KEYSPACE_PROP, "cache");
     // remainder are fed into BuilderPropertySetter to build ClusterEnvironment...
     props.put("timeout.kvTimeout", "2.5s");
-    CachingProvider cp = new CouchbaseCachingProvider(new URI("couchbase://localhost"), null, props);
+    CachingProvider cp = new CouchbaseCachingProvider(null, null, props);
     CacheManager manager = cp.getCacheManager();
     Configuration config = new CouchbaseCacheConfig(String.class, User.class, new Properties());
     Cache<String, Object> cache = manager.createCache("test", config);

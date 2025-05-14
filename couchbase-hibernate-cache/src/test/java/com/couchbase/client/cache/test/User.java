@@ -2,7 +2,9 @@ package com.couchbase.client.cache.test;
 
 import com.couchbase.client.java.json.JsonObject;
 
-public class User {
+import java.io.Serializable;
+
+public class User implements Serializable {
   static int uid=0;
   public String id;
   public String firstname;

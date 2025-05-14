@@ -17,19 +17,26 @@
 package com.couchbase.client.cache;
 
 import com.couchbase.client.java.json.JsonObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.cache.CacheManager;
 import javax.cache.configuration.OptionalFeature;
 import javax.cache.spi.CachingProvider;
-import java.io.Closeable;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+
+import static com.couchbase.client.core.util.Validators.notNull;
 
 public class CouchbaseCachingProvider implements javax.cache.spi.CachingProvider {
 
@@ -37,37 +44,80 @@ public class CouchbaseCachingProvider implements javax.cache.spi.CachingProvider
   private final ClassLoader classLoader;
   private final Properties properties;
   private final List<CacheManager> managers = new LinkedList<>();
+	private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
+
+	public final static String URI_PROP = "uri";
+	public final static String USERNAME_PROP = "username";
+	public final static String PASSWORD_PROP = "password";
+	public final static String KEYSPACE_PROP = "keyspace";
 
    public CouchbaseCachingProvider(URI uri, ClassLoader classLoader, Properties properties) {
-     this.uri = uri != null ? uri : defaultURI();
+
+		properties = defaultProps();
+		if (uri != null) {
+			try {
+				URL url = uri.toURL();
+				InputStream inputStream = url.openStream();
+				properties.load(inputStream);
+				notNull(properties.get(URI_PROP), URI_PROP);
+				notNull(properties.get(USERNAME_PROP), USERNAME_PROP);
+				notNull(properties.get(PASSWORD_PROP), PASSWORD_PROP);
+				notNull(properties.get(KEYSPACE_PROP), KEYSPACE_PROP);
+				/*
+				props.put("security.enableTls", String.valueOf(isTls(uri)));
+				props.put("io.numKvConnections", "1");
+				props.put("timeout.kvTimeout", "2.5s");
+				 */
+
+			} catch (IOException e) {
+				System.err.println("Error loading properties: " + e.getMessage());
+			}
+		}
+
+		this.uri = uri;
      this.classLoader = classLoader != null ? classLoader : CouchbaseCachingProvider.class.getClassLoader();
-     this.properties = properties != null ? properties : defaultProps();
+		this.properties = properties;
    }
+
+	public static JsonObject loadJsonFromUri(URI uri) throws IOException {
+		URL url = uri.toURL();
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
+			StringBuilder response = new StringBuilder();
+			String line;
+			while ((line = reader.readLine()) != null) {
+				response.append(line);
+			}
+			return JsonObject.fromJson(response.toString());
+		}
+	}
 
   public CouchbaseCachingProvider() {
      this(null,null,null);
   }
 
-  static URI defaultURI() {
-    try {
-      return new URI("couchbases://localhost");
-    } catch (URISyntaxException e) {
-      throw new RuntimeException(e);
-    }
-  }
 
   static Properties defaultProps(){
     Properties props = new Properties();
     // username/password.  These are removed before properties is fed into builder.load(props).
-    props.put("username", "Administrator");
-    props.put("password", "password");
-    props.put("bucket", "cache");
+	props.put(URI_PROP, "couchbase://localhost");
+	props.put(USERNAME_PROP, "Administrator");
+	props.put(PASSWORD_PROP, "password");
+	props.put(KEYSPACE_PROP, "cache");
     // remainder are fed into BuilderPropertySetter
-    props.put("security.enableTls", "true");
-    props.put("io.numKvConnections", "1");
-    props.put("timeout.kvTimeout", "2.5s");
+	// props.put("security.enableTls", "false");
+	// props.put("io.numKvConnections", "1");
+	// props.put("timeout.kvTimeout", "2.5s");
     return props;
   }
+
+	public static boolean isTls(URI uri) {
+		if (uri.getScheme().toLowerCase().equals("couchbases") || uri.getScheme().toLowerCase().equals("couchbase2s")
+				|| uri.getScheme().toLowerCase().equals("https")) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 
   @Override
   public CacheManager getCacheManager(URI uri, ClassLoader classLoader, Properties properties) {

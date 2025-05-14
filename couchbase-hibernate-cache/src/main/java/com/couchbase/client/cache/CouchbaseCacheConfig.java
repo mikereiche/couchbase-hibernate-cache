@@ -17,32 +17,22 @@
 package com.couchbase.client.cache;
 
 import javax.cache.configuration.Configuration;
+import javax.cache.configuration.MutableConfiguration;
 import java.util.Properties;
 
-public class CouchbaseCacheConfig<K, V> implements Configuration<K, V> {
+/**
+ * this class is maybe unnecessary ?
+  */
 
-  Class<K> keyClass;
-  Class<V> valueClass;
+public class CouchbaseCacheConfig<K, V> extends MutableConfiguration<K, V> implements Configuration<K, V> {
+
+
   Properties properties;
 
   public CouchbaseCacheConfig(Class<K> keyClass, Class<V> valueClass, Properties properties){
-    this.keyClass = keyClass;
-    this.valueClass = valueClass;
+    setTypes(keyClass, valueClass);
     this.properties = properties;
   }
 
-  @Override
-  public Class<K> getKeyType() {
-    return keyClass;
-  }
 
-  @Override
-  public Class<V> getValueType() {
-    return valueClass;
-  }
-
-  @Override
-  public boolean isStoreByValue() {
-    return false;
-  }
 }

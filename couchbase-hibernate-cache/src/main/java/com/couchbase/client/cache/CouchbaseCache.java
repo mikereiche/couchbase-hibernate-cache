@@ -18,6 +18,7 @@ package com.couchbase.client.cache;
 
 /**
  */
+import com.couchbase.client.core.deps.com.google.gson.JsonObject;
 import com.couchbase.client.core.error.DocumentExistsException;
 import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.Collection;
@@ -26,10 +27,16 @@ import com.couchbase.client.java.kv.GetResult;
 import javax.cache.CacheManager;
 import javax.cache.configuration.CacheEntryListenerConfiguration;
 import javax.cache.configuration.Configuration;
+import javax.cache.configuration.MutableConfiguration;
 import javax.cache.integration.CompletionListener;
 import javax.cache.processor.EntryProcessor;
 import javax.cache.processor.EntryProcessorException;
 import javax.cache.processor.EntryProcessorResult;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -38,11 +45,12 @@ public class CouchbaseCache<K, V> implements javax.cache.Cache<K, V> {
 
 	private final String name;
 	private Collection collection;
-	private final CouchbaseCacheConfig config;
+	private final /* CouchbaseCacheConfig */ MutableConfiguration config;
 	private boolean isClosed = false;
 	private final CouchbaseCacheManager manager;
 
-	public CouchbaseCache(CouchbaseCacheManager manager, String name, Collection collection, CouchbaseCacheConfig config) {
+	public CouchbaseCache(CouchbaseCacheManager manager, String name, Collection collection,
+			/*CouchbaseCacheConfig*/ MutableConfiguration config) {
 		this.manager = manager;
 		this.name = name;
 		this.collection = collection;
@@ -51,8 +59,38 @@ public class CouchbaseCache<K, V> implements javax.cache.Cache<K, V> {
 
 	@Override
 	public V get(K k) {
+		try {
 		GetResult result = collection.get(k.toString());
-		return (V) result.contentAs(config.getValueType());
+		byte[] bytes = result.contentAsBytes();
+		Object o = deserialize(bytes); // could use a serializing transcoder
+		return (V) o;
+	} catch (DocumentNotFoundException dnf) {
+		System.err.println(" dnf " + dnf);
+		return null;
+	}
+	}
+
+	public Object deserialize(byte[] data) {
+		try {
+			ByteArrayInputStream bais = new ByteArrayInputStream(data);
+			ObjectInputStream ois = new ObjectInputStream(bais);
+			Object obj = ois.readObject();
+			ois.close();
+			return (V) obj;
+		} catch (IOException | ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public static byte[] serialize(Object obj) {
+		try {
+			ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+			ObjectOutputStream objStream = new ObjectOutputStream(byteStream);
+			objStream.writeObject(obj);
+			return byteStream.toByteArray();
+		} catch (IOException ioe) {
+			throw new RuntimeException(ioe);
+		}
 	}
 
 	@Override
@@ -72,7 +110,7 @@ public class CouchbaseCache<K, V> implements javax.cache.Cache<K, V> {
 
 	@Override
 	public void put(K k, V v) {
-		collection.upsert(k.toString(), v);
+		collection.upsert(k.toString(), serialize(v)); // could use a serializing transcoder
 	}
 
 	@Override
@@ -88,7 +126,7 @@ public class CouchbaseCache<K, V> implements javax.cache.Cache<K, V> {
 	@Override
 	public boolean putIfAbsent(K k, V v) {
 		try {
-			collection.insert(k.toString(), v);
+			collection.insert(k.toString(), serialize(v)); // could use a serializing transcoder
 			return true;
 		} catch (DocumentExistsException de) {
 			return false;
